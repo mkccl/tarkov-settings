@@ -3,12 +3,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SettingsCard } from "@/components/settings-card";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
 interface UserProfilePageProps {
   params: {
     username: string;
   };
 }
+
+type SettingsProfileWithCount = Prisma.SettingsProfileGetPayload<{
+  include: {
+    _count: {
+      select: { stars: true; comments: true };
+    };
+  };
+}>;
 
 export default async function UserProfilePage({
   params,
@@ -51,13 +60,16 @@ export default async function UserProfilePage({
         {user.settingsProfiles.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-lg text-muted-foreground">
-              {user.twitchUsername} hasn't published any settings yet.
+              {user.twitchUsername} hasn&#39;t published any settings yet.
             </p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {user.settingsProfiles.map((profile) => (
-              <Link key={profile.id} href={`/${user.twitchUsername}/settings/${profile.id}`}>
+            {user.settingsProfiles.map((profile: SettingsProfileWithCount) => (
+              <Link
+                key={profile.id}
+                href={`/${user.twitchUsername}/settings/${profile.id}`}
+              >
                 <SettingsCard
                   twitchName={user.twitchUsername}
                   settingsName={profile.name}
