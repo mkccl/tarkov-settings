@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String            @id @default(cuid())
+  clerkId          String            @unique
+  email            String            @unique
+  twitchUsername   String            @unique
+  avatarUrl        String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  settingsProfiles SettingsProfile[]
+  comments         Comment[]
+  stars            Star[]
+
+  @@index([clerkId])
+  @@index([twitchUsername])
+}
+
+model SettingsProfile {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile info
+  name        String
+  description String?
+  published   Boolean @default(false)
+
+  // GPU Settings
+  gpuBrand String // "NVIDIA" or "AMD"
+
+  // NVIDIA GPU Settings (nullable for AMD users)
+  nvidiaBrightness      Int?
+  nvidiaContrast        Int?
+  nvidiaGamma           Float?
+  nvidiaDigitalVibrance Int?
+  nvidiaHue             Int?
+
+  // AMD GPU Settings (nullable for NVIDIA users)
+  amdColorTempControl        Boolean?
+  amdBrightness              Int? // -100 to 100
+  amdHue                     Int? // -30 to 30
+  amdContrast                Int? // 0 to 200
+  amdSaturation              Int? // 0 to 200
+  amdDisplayColorEnhancement String? // "DynamicContrast", "VividGaming", "UseGlobalSettings", "Disabled"
+  amdDynamicContrastValue    Int? // 0 to 10 (only for DynamicContrast)
+
+  // Settings stored as JSON
+  gameSettings     Json
+  soundSettings    Json
+  postFxSettings   Json
+  graphicsSettings Json
+  controlSettings  Json
+
+  // Analytics
+  viewCount     Int @default(0)
+  downloadCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments Comment[]
+  stars    Star[]
+
+  @@index([userId])
+  @@index([published])
+  @@index([downloadCount])
+}
+
+model Comment {
+  id                String          @id @default(cuid())
+  settingsProfileId String
+  settingsProfile   SettingsProfile @relation(fields: [settingsProfileId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([settingsProfileId])
+  @@index([userId])
+}
+
+model Star {
+  id                String          @id @default(cuid())
+  settingsProfileId String
+  settingsProfile   SettingsProfile @relation(fields: [settingsProfileId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating    Int // 1-5 star rating
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([settingsProfileId, userId])
+  @@index([settingsProfileId])
+  @@index([userId])
+}
