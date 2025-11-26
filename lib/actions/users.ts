@@ -1,8 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Prisma } from ".prisma/client";
-import UserCreateWithoutSettingsProfilesInput = Prisma.UserCreateWithoutSettingsProfilesInput;
+import { Prisma } from "@prisma/client";
 
 /**
  * Create or update a user from Clerk/Twitch authentication
